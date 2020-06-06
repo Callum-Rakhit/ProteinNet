@@ -1,21 +1,35 @@
-# Purpose: Interactive Shiny App that allows the user to select multiple PanelApp panels using the 
-# PanelApp API.  Network analysis is then performed to identify candidates.
+# Interactive Shiny App that allows the user to select multiple PanelApp panels using 
+# the PanelApp API.  Network analysis is then performed to identify candidates.
 source("chooser.R")
 source("webGestaltAPI.R")
 
-# Load libraries
-lapply(c("shiny", "tidyverse", "jsonlite", "ggplot2", "plotly", 
-         "igraph", "WebGestaltR", "RCy3", "waiter"), 
-       require, character.only = T)
-
-if (!requireNamespace("BiocManager", quietly = T)) {
-  install.packages("BiocManager")
+# Get required packages
+GetPackages <- function(required.packages) {
+  packages.not.installed <- required.packages[!(required.packages %in% installed.packages()[, "Package"])]
+  if(length(packages.not.installed)){install.packages(packages.not.installed, dependencies = T)}
+  suppressMessages(lapply(required.packages, require, character.only = T))
 }
 
-BiocManager::install("RCy3")
+GetPackages(c("BiocManager", "shiny", "tidyverse", "jsonlite", "ggplot2", 
+              "plotly", "igraph", "WebGestaltR", "RCy3", "waiter", "png"))
+
+# One package needed from BiocManager
+if (!requireNamespace("RCy3", quietly = T)) {
+  install.packages("RCy3")
+}
+
+# Test if Cytoscape has successfully loaded
+test.message <- cytoscapePing ()
+if(test.message == "You are connected to Cytoscape!"){
+  print("You are connected to Cytoscape!")
+} else {
+  print("Connection failed - make sure Cytoscape is open locally")
+}
+
+# List of CytoScape apps to install
+installApp(c("clustermaker2", "enrichmentmap", "autoannotate", "wordcloud", "stringapp", "aMatReader"))
 
 # Define functions
-
 getPanelAppList <- function() {
   api_query <- "https://panelapp.genomicsengland.co.uk/WebServices/list_panels/?format=json"
   json_data <- fromJSON(api_query, flatten = T)
@@ -28,6 +42,26 @@ getPanelAppList <- function() {
 }
 
 panel_list <- getPanelAppList()
+
+
+# This needs to be passed from the PanelApp list
+# panel.genes <- read.csv(file = "../../Documents/genelist_example.csv")
+
+StringGeneExpansion <- function(panel.genes){
+  # This determines the query sent to String to expand the gene list
+  string_interaction_cmd <- paste('string protein query taxonID=9606 limit=1000 cutoff=0.8 query="',
+                                  paste(panel.genes, collapse = ","), '"', sep = "")
+  commandsGET(string_interaction_cmd)
+  node.attribute.table <- getTableColumns(table="node")
+  return(node.attribute.table)
+}
+
+# Create force directed layout
+NetworkImage <- function(){
+  layoutNetwork('force-directed')
+  getLayoutPropertyNames(layout.name = 'force-directed')
+  layoutNetwork('force-directed defaultSpringCoefficient=0.0000008 defaultSpringLength=70')
+}
 
 getPanelGenes <- function(panel_id){
   api_query <- paste0("https://panelapp.genomicsengland.co.uk/WebServices/get_panel/",
@@ -63,9 +97,13 @@ ui <- navbarPage(
   ),
   tabPanel("Imported genes",
            titlePanel("Genes Selected for Analysis"),
-           DT::dataTableOutput("gene_table")
+           DT::dataTableOutput("gene_table"),
+           DT::dataTableOutput("expanded_gene_table")
   ),
   tabPanel("Network Analysis",
+           titlePanel("Network Analysis for selected PanelApp gene panel"),
+           # DT::dataTableOutput("network_analysis"),
+           imageOutput("network_analysis_image"),
            "Place html help file here"
   ),
   tabPanel("WebGestaltAPI",
