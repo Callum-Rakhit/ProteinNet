@@ -4,9 +4,9 @@
 
 This tool can extract gene lists from PanelApp gene panels and perform network analysis on them with the aim of identifying candidates for expansion.
 
-## WORKFLOW OF THE PIPELINE
+## Screenshot of the homepage
 
-![Alt text](ProteinNet/ProteinNet_Homepage.png?raw=true "Workflow")
+![Alt text](ProteinNet_Homepage.png?raw=true "Workflow")
 
 ## Installation
 
