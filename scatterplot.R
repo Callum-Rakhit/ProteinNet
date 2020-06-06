@@ -1,6 +1,5 @@
-library(ggplot2)
-library(plotly)
-library(tidyverse)
+# Install/load packages
+lapply(c("ggplot2", "plotly", "tidyverse"), require, character.only = T)
 
 # Scatterplot of Centrality vs Bridgeness
 
@@ -11,7 +10,7 @@ plot_data <- read_delim("/home/graeme/Desktop/panelapp_network/panelNet/inst/ext
 
 selected_panel_name <- "test_panel"
 
-# simplify column names
+# Simplify column names
 colnames(plot_data) <- c("nodeID", "MLcentrality", "MLbridgeness")
 
 # Perform log transformation to data

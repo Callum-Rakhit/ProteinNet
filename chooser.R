@@ -1,5 +1,5 @@
 chooserInput <- function(inputId, leftLabel, rightLabel, leftChoices, rightChoices,
-                         size = 5, multiple = FALSE) {
+                         size = 5, multiple = F) {
   
   leftChoices <- lapply(leftChoices, tags$option)
   rightChoices <- lapply(rightChoices, tags$option)
@@ -37,4 +37,5 @@ registerInputHandler("shinyjsexamples.chooser", function(data, ...) {
     NULL
   else
     list(left=as.character(data$left), right=as.character(data$right))
-}, force = TRUE)
+}, force = T)
+

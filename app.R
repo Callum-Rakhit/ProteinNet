@@ -1,23 +1,24 @@
-#
 # Purpose: Interactive Shiny App that allows the user to select multiple PanelApp panels using the 
-# PanelApp API.  Network analysis is then performed to identify 
+# PanelApp API.  Network analysis is then performed to identify candidates.
 source("chooser.R")
 source("webGestaltAPI.R")
-library(shiny)
-library(tidyverse)
-library(jsonlite)
-library(ggplot2)
-library(plotly)
-library(igraph)
-library(WebGestaltR)
-library(RCy3)
-library(waiter)
+
+# Load libraries
+lapply(c("shiny", "tidyverse", "jsonlite", "ggplot2", "plotly", 
+         "igraph", "WebGestaltR", "RCy3", "waiter"), 
+       require, character.only = T)
+
+if (!requireNamespace("BiocManager", quietly = T)) {
+  install.packages("BiocManager")
+}
+
+BiocManager::install("RCy3")
 
 # Define functions
 
 getPanelAppList <- function() {
   api_query <- "https://panelapp.genomicsengland.co.uk/WebServices/list_panels/?format=json"
-  json_data <- fromJSON(api_query, flatten=TRUE)
+  json_data <- fromJSON(api_query, flatten = T)
   panelApp_panels <- tibble(panel_name = json_data$result$Name,
                             panel_id = json_data$result$Panel_Id,
                             num_of_gene = json_data$result$Number_of_Genes,
@@ -32,7 +33,7 @@ getPanelGenes <- function(panel_id){
   api_query <- paste0("https://panelapp.genomicsengland.co.uk/WebServices/get_panel/",
                       panel_id,
                       "/?format=json")
-  json_data <- fromJSON(api_query, flatten=TRUE)
+  json_data <- fromJSON(api_query, flatten = T)
   panel_genes <- tibble(gene_symbol = json_data$result$Genes$GeneSymbol,
                         evidence = json_data$result$Genes$LevelOfConfidence)  
   
@@ -51,7 +52,7 @@ ui <- navbarPage(
       panel_list$panel_name,
       c(),
       size = 10,
-      multiple = TRUE
+      multiple = T
     ),
     actionButton("runAll", label="Run Analysis"),
     p("Click the button to analyze panels")
@@ -124,8 +125,9 @@ server <- function(input, output, session) {
 }
 
 # Currently hardcoded output directory (file written over every time app is run)
-html_temp_file <- paste0(outputDirectory, "/Project_temp_webGestalt/Report_temp_webGestalt.html")
+html_temp_file <- paste0(outputDirectory, "/Documents/ProteinNet/Project_temp_webGestalt/Report_temp_webGestalt.html")
+
+paste0(outputDirectory, "/Documents/ProteinNet/Project_temp_webGestalt/Report_temp_webGestalt.html")
 
 # Run the application 
 shinyApp(ui = ui, server = server)
-
